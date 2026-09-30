@@ -43,6 +43,9 @@
     font-family: var(--sans); line-height: 1.55;
     transition: background .4s ease, color .4s ease;
   }
+  /* fixed nav: reserve its height so content isn't hidden under it (--nav-h is measured in JS) */
+  body { padding-top: var(--nav-h, 66px); }
+  html { scroll-padding-top: calc(var(--nav-h, 66px) + 8px) !important; }
   ::selection { background: var(--accent-soft); }
   a { color: inherit; }
   .wrap { max-width: 1320px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 56px); }
@@ -50,8 +53,8 @@
 
   /* ---- Nav ---- */
   nav {
-    position: sticky; top: 0; top: env(safe-area-inset-top, 0px);
-    z-index: 20; backdrop-filter: blur(10px);
+    position: fixed; top: 0; left: 0; right: 0; width: 100%;
+    z-index: 60; backdrop-filter: blur(10px);
     background: color-mix(in srgb, var(--bg) 82%, transparent);
     border-bottom: 1px solid var(--line);
   }
@@ -60,16 +63,20 @@
   .brand-logo { width: 60px; height: 32px; object-fit: contain; display: block; }
   .navlinks { display: flex; gap: 26px; font-size: 14px; }
   .navlinks a { text-decoration: none; color: var(--ink-dim2); border-bottom: 1px solid transparent; padding-bottom: 2px; }
-  .navlinks a:hover { border-color: var(--accent); color: var(--ink); }
+  .navlinks a:hover, .navlinks a.active { border-color: var(--accent); color: var(--ink); }
+  .navlinks a, .mode-toggle button { transition: color .25s ease, border-color .25s ease, background .25s ease; }
   .mode-toggle { display: flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; font-family: var(--mono); font-size: 12px; }
   .mode-toggle button {
     background: none; border: none; color: var(--ink-dim2); padding: 7px 14px; cursor: pointer; font-family: inherit;
   }
   .mode-toggle button.active { background: var(--accent); color: #14120F; }
+  /* each toggle keeps its own colour, whatever the page accent currently is */
+  .mode-toggle button.active[data-mode="teal"] { background: var(--teal); }
+  .mode-toggle button.active[data-mode="amber"] { background: var(--amber); }
 
   /* ---- Hero ---- */
   .eyebrow { font-family: var(--mono); font-size: 13px; color: var(--ink-dim2); margin: 0 0 18px; }
-  h1.name {
+  h1.name, .name-ai {
     font-family: var(--serif); font-weight: 500; font-size: clamp(42px, 8vw, 78px);
     line-height: 1.02; margin: 0 0 22px; letter-spacing: -.01em;
   }
@@ -151,7 +158,7 @@
     grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); min-height: 620px;
   }
   .hero-copy { padding: 92px 0 72px; }
-  h1.name { font-size: clamp(40px, 6.2vw, 72px); }
+  h1.name, .name-ai { font-size: clamp(40px, 6.2vw, 72px); }
   .hero .role-pill { color: #fff; border-color: #ffffff59; background: #ffffff14; }
   .hero .role-pill::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
   .hero .role-pill.editor::before { background: var(--amber); }
@@ -181,6 +188,52 @@
   .portrait-glow { animation: glowIn 1.4s ease .3s both, glowPulse 5s ease-in-out 1.8s infinite alternate; }
   @media (prefers-reduced-motion: reduce) {
     .rise, .portrait-img, .portrait-glow { animation: none; opacity: 1; }
+  }
+
+  /* ---- hero slideshow (Video Editing / AI & Data Analysis) ---- */
+  .hero-bg-ai {
+    position: absolute; inset: 0; z-index: 0; opacity: 0; transition: opacity .9s ease;
+    background: radial-gradient(ellipse 70% 95% at 74% 50%, #16a394 0%, #0f7a78 36%, #0a4d56 76%, #04222b 100%);
+  }
+  header.hero.is-ai .hero-bg-ai { opacity: 1; }
+  .portrait-glow { transition: filter .9s ease; }
+  header.hero.is-ai .portrait-glow { filter: blur(18px) hue-rotate(180deg); }
+
+  .hero-left { min-width: 0; align-self: center; padding-top: 40px; }
+  .hero-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+  .hero-tab {
+    position: relative; overflow: hidden; cursor: pointer; font-family: var(--mono); font-size: 12.5px; color: #F8F1EAcc;
+    background: transparent; border: 1px solid #ffffff40; border-radius: 999px; padding: 7px 15px; white-space: nowrap;
+    transition: color .25s ease, border-color .25s ease, background .25s ease;
+  }
+  .hero-tab:hover { color: #fff; border-color: #ffffff80; }
+  .hero-tab:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .hero-tab.active { color: #fff; border-color: #ffffffb3; background: #ffffff14; }
+  .hero-tab span { position: relative; z-index: 1; }
+  .hero-tab i { position: absolute; inset: 0; width: 0; background: #ffffff2b; z-index: 0; pointer-events: none; }
+  .hero-tab.active i { animation: heroProg var(--hero-dur, 7s) linear forwards; }
+  header.hero.paused .hero-tab.active i { animation-play-state: paused; }
+  @keyframes heroProg { from { width: 0; } to { width: 100%; } }
+
+  .hero-slides { display: grid; }
+  .hero-slide {
+    grid-area: 1 / 1; min-width: 0;
+    opacity: 0; visibility: hidden; transform: translateX(36px); pointer-events: none;
+    transition: opacity .6s ease, transform .75s cubic-bezier(.16,1,.3,1), visibility 0s linear .75s;
+  }
+  .hero-slide.left { transform: translateX(-36px); }
+  .hero-slide.active { opacity: 1; visibility: visible; transform: none; pointer-events: auto; transition-delay: 0s; }
+  .hero-slides > .hero-slide { align-self: start; }
+  .hero-left .hero-copy { padding-top: 26px; }
+  .hero-slide.ai { --ink-dim2: #CDECE7; }
+  .hero-slide.ai .role-pill.engineer::before { background: #8ff0dd; }
+  @media (max-width: 760px) {
+    .hero-left { align-self: auto; padding-top: 26px; }
+    .hero-left .hero-copy { padding-top: 18px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-slide, .hero-bg-ai, .portrait-glow { transition: none; }
+    .hero-tab.active i { animation: none; }
   }
 
   section { padding: 68px 0; border-top: 1px solid var(--line); }
@@ -268,13 +321,14 @@
   #videoGrid { will-change: transform, opacity; touch-action: pan-y; }
 
   /* project slider (auto-paginates every 4 cards) */
-  .grid-slider { display: flex; align-items: flex-start; gap: 14px; }
-  .project-pages { flex: 1; min-width: 0; }
-  .grid-slider .slider-btn { margin-top: 60px; }
-  .grid-slider.single .slider-btn, .page-dots.single { display: none; }
-  .page-dots { display: flex; gap: 8px; justify-content: center; margin-top: 18px; }
-  .page-dots button { width: 8px; height: 8px; padding: 0; border-radius: 50%; border: none; background: var(--line); cursor: pointer; }
-  .page-dots button.active { background: var(--amber); }
+  .grid-slider { display: block; }
+  .project-pages { width: 100%; min-width: 0; }
+  .pager { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 22px; }
+  .pager.single { display: none; }
+  .page-dots { display: flex; align-items: center; gap: 8px; }
+  .page-dots button { width: 8px; height: 8px; padding: 0; border-radius: 999px; border: none; background: var(--line); cursor: pointer; transition: width .3s ease, background .3s ease; position: relative; }
+  .page-dots button::after { content: ''; position: absolute; inset: -12px -5px; } /* bigger tap target */
+  .page-dots button.active { width: 24px; background: var(--amber); }
 
 
   /* ---- Skills ---- */
@@ -312,7 +366,7 @@
     h2.section-title { font-size: clamp(32px, 3.4vw, 46px); }
     p.section-kicker { font-size: 17px; max-width: 70ch; }
     .hero-grid { min-height: clamp(620px, 76vh, 780px); }
-    h1.name { font-size: clamp(56px, 6vw, 92px); }
+    h1.name, .name-ai { font-size: clamp(56px, 6vw, 92px); }
     .hero p.lede { font-size: 20px; max-width: 60ch; }
     .stat b { font-size: 38px; }
     .hero-portrait { width: min(100%, 560px); }
@@ -329,7 +383,7 @@
   .navlinks a { white-space: nowrap; }
   .mode-toggle button { white-space: nowrap; }
   html { scroll-padding-top: 76px; }
-  @media (max-width: 720px) {
+  @media (max-width: 900px) {
     html { scroll-padding-top: 108px; }
     nav .wrap { flex-wrap: wrap; row-gap: 10px; padding-top: 10px; padding-bottom: 10px; }
     .brand { order: 1; }
@@ -349,13 +403,23 @@
   /* ---- language toggle + nav tools ---- */
   .nav-tools { display: flex; align-items: center; gap: 10px; }
   .lang-toggle { display: flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; font-family: var(--mono); font-size: 12px; }
-  .lang-toggle button { background: none; border: none; color: var(--ink-dim2); padding: 7px 11px; cursor: pointer; font-family: inherit; white-space: nowrap; }
-  .lang-toggle button:hover { color: var(--ink); }
-  .lang-toggle button.active { background: var(--accent); color: #14120F; }
+  .lang-toggle button { background: none; border: none; padding: 5px 7px; cursor: pointer; display: flex; align-items: center; }
+  .lang-toggle .flag {
+    display: block; width: 22px; height: 22px; border-radius: 50%; overflow: hidden; opacity: .45; filter: saturate(.55);
+    transition: opacity .25s ease, filter .25s ease, box-shadow .25s ease, transform .25s ease;
+  }
+  .lang-toggle .flag svg { display: block; width: 100%; height: 100%; }
+  .lang-toggle button:hover .flag { opacity: .85; filter: none; }
+  .lang-toggle button:focus-visible { outline: none; }
+  .lang-toggle button:focus-visible .flag { box-shadow: 0 0 0 2px var(--accent); }
+  .lang-toggle button.active .flag { opacity: 1; filter: none; box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--ink); }
   @media (max-width: 980px) { .navlinks { gap: 16px; } }
-  @media (max-width: 720px) {
+  .brand, .nav-tools { flex-shrink: 0; }
+  @media (min-width: 901px) { nav .navlinks { overflow: visible; flex-shrink: 0; } nav .wrap { column-gap: 20px; } }
+  @media (max-width: 900px) {
     .nav-tools { order: 2; gap: 8px; }
-    .lang-toggle button { padding: 6px 10px; }
+    .lang-toggle button { padding: 5px 6px; }
+    .lang-toggle .flag { width: 20px; height: 20px; }
   }
 
   /* ---- back to top ---- */
@@ -488,7 +552,7 @@
   .cv-panel {
     position: relative; overflow: hidden;
     background: var(--bg-panel); border: 1px solid var(--line); border-radius: 16px;
-    width: min(1240px, calc(100vw - 180px)); height: min(680px, 92vh);
+    width: min(1120px, calc(100vw - 220px)); height: min(480px, 78vh);
     transform: translateY(18px) scale(.98); opacity: 0; transition: transform .3s cubic-bezier(.16,1,.3,1), opacity .3s ease;
   }
   .cv-overlay.open .cv-panel { transform: none; opacity: 1; }
@@ -496,7 +560,7 @@
   .cv-slide {
     grid-area: 1 / 1; min-width: 0; will-change: transform, opacity;
     display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-    gap: 40px; align-items: start; padding: 40px 44px; box-sizing: border-box; height: 100%; grid-template-rows: minmax(0, 1fr); overflow: hidden;
+    gap: 28px; align-items: start; padding: 30px 36px; box-sizing: border-box; height: 100%; grid-template-rows: minmax(0, 1fr); overflow: hidden;
   }
   .cv-slide.leaving { position: absolute; inset: 0; pointer-events: none; }
   .cv-left { min-width: 0; }
@@ -511,15 +575,15 @@
   }
   a.cv-media:hover::before { background: rgba(0,0,0,.25); }
   a.cv-media:hover::after { transform: scale(1.1); background: var(--accent); color: var(--bg); opacity: 1; }
-  .cv-left h3 { font-family: var(--serif); font-weight: 500; font-size: 32px; line-height: 1.2; margin: 22px 0 0; overflow-wrap: anywhere; }
-  .cv-right { min-width: 0; min-height: 0; max-height: 100%; overflow-y: auto; scrollbar-width: thin; display: flex; flex-direction: column; gap: 22px; align-self: stretch; padding-top: 4px; }
-  .cv-right p { color: var(--ink-dim2); font-size: 17px; line-height: 1.65; margin: 0; }
+  .cv-left h3 { font-family: var(--serif); font-weight: 500; font-size: 25px; line-height: 1.2; margin: 14px 0 0; overflow-wrap: anywhere; }
+  .cv-right { min-width: 0; min-height: 0; max-height: 100%; overflow-y: auto; scrollbar-width: thin; display: flex; flex-direction: column; gap: 14px; padding-top: 0; }
+  .cv-right p { color: var(--ink-dim2); font-size: 15px; line-height: 1.55; margin: 0; }
   .cv-label { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-dim2); opacity: .75; margin-bottom: 9px; }
   .cv-tags { display: flex; flex-wrap: wrap; gap: 8px; }
   .cv-watch {
     display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-family: var(--mono);
     font-size: 14px; color: var(--bg); background: var(--amber); padding: 12px 22px; border-radius: 8px;
-    align-self: flex-start; margin-top: auto;
+    align-self: flex-start; margin-top: 4px;
   }
   .cv-watch:hover { filter: brightness(1.1); }
   .cv-close { z-index: 5;
@@ -539,11 +603,11 @@
   .cv-nav:hover { background: rgba(224,164,88,.35); border-color: var(--accent); }
   .cv-nav.cv-prev { left: 22px; } .cv-nav.cv-next { right: 22px; }
   @media (max-width: 900px) {
-    .cv-panel { width: calc(100vw - 32px); height: min(88vh, 760px); }
-    .cv-slide { grid-template-columns: 1fr; grid-template-rows: none; gap: 22px; padding: 22px 20px 26px; overflow-y: auto; align-content: start; }
-    .cv-right { overflow: visible; max-height: none; }
-    .cv-left h3 { font-size: 25px; margin-top: 16px; }
-    .cv-right p { font-size: 15.5px; }
+    .cv-panel { width: calc(100vw - 24px); height: min(64vh, 520px); }
+    .cv-slide { grid-template-columns: 1fr; grid-template-rows: none; gap: 14px; padding: 16px 16px 20px; overflow-y: auto; align-content: start; }
+    .cv-right { overflow: visible; max-height: none; gap: 10px; }
+    .cv-left h3 { font-size: 19px; margin-top: 10px; }
+    .cv-right p { font-size: 13.5px; line-height: 1.5; }
     .cv-watch { margin-top: 4px; }
     .cv-nav { width: 38px; height: 38px; font-size: 16px; }
     .cv-nav.cv-prev { left: 8px; } .cv-nav.cv-next { right: 8px; }
@@ -571,21 +635,41 @@
     </div>
     <div class="nav-tools">
       <div class="lang-toggle" role="group" aria-label="Language">
-        <button type="button" class="active" data-lang="en" aria-label="English" lang="en">EN</button>
-        <button type="button" data-lang="fr" aria-label="Français" lang="fr">FR</button>
+        <button type="button" class="active" data-lang="en" aria-label="English" lang="en" title="English"><span class="flag" aria-hidden="true"><svg viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice"><clipPath id="ukClip"><path d="M30,15h30v15zv15h-30zh-30v-15zv-15h30z"/></clipPath><path d="M0,0v30h60v-30z" fill="#012169"/><path d="M0,0 60,30M60,0 0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 60,30M60,0 0,30" clip-path="url(#ukClip)" stroke="#C8102E" stroke-width="4"/><path d="M30,0v30M0,15h60" stroke="#fff" stroke-width="10"/><path d="M30,0v30M0,15h60" stroke="#C8102E" stroke-width="6"/></svg></span></button>
+        <button type="button" data-lang="fr" aria-label="Français" lang="fr" title="Français"><span class="flag" aria-hidden="true"><svg viewBox="0 0 3 3" preserveAspectRatio="none"><rect width="1" height="3" fill="#0055A4"/><rect x="1" width="1" height="3" fill="#fff"/><rect x="2" width="1" height="3" fill="#EF4135"/></svg></span></button>
       </div>
       <div class="mode-toggle" role="group" aria-label="Accent focus">
-        <button class="active" data-mode="teal">AI & Data Science</button>
+        <button class="active" data-mode="teal">AI & Data Analysis</button>
         <button data-mode="amber">Video Editing</button>
       </div>
     </div>
   </div>
 </nav>
 
-<header class="hero" id="top">
+<header class="hero is-ai" id="top">
   <div class="hero-bg" aria-hidden="true"></div>
+  <div class="hero-bg-ai" aria-hidden="true"></div>
   <div class="wrap hero-grid">
-    <div class="hero-copy">
+    <div class="hero-left" id="heroLeft">
+      <div class="hero-tabs" role="tablist" aria-label="Hero slides">
+        <button type="button" class="hero-tab active" id="heroTab0" role="tab" aria-selected="true" aria-controls="heroSlide0" data-slide="0"><i></i><span>AI &amp; Data Analysis</span></button>
+        <button type="button" class="hero-tab" id="heroTab1" role="tab" aria-selected="false" aria-controls="heroSlide1" data-slide="1"><i></i><span>Video Editing</span></button>
+      </div>
+      <div class="hero-slides">
+    <div class="hero-copy hero-slide ai active" id="heroSlide0" role="tabpanel" aria-labelledby="heroTab0">
+      <p class="eyebrow rise" style="--d:.05s">Annaba, Algeria — freelance since 2021</p>
+      <div class="name-ai rise" style="--d:.15s">Abdeldjalil Halisse</div>
+      <div class="roles rise" style="--d:.25s">
+        <span class="role-pill engineer">AI Engineer &amp; Data Analyst</span>
+      </div>
+      <p class="lede rise" style="--d:.35s">I build models and dashboards that make sense of data — from machine-learning pipelines to Power BI reporting. Master's-level training in artificial intelligence and information processing at Badji Mokhtar University, Annaba.</p>
+      <div class="stat-row rise" style="--d:.45s">
+        <div class="stat"><b>MSc</b><span>in Artificial Intelligence</span></div>
+        <div class="stat"><b>Python</b><span>SQL &amp; Power BI for data work</span></div>
+        <div class="stat"><b>2</b><span>disciplines, one workflow</span></div>
+      </div>
+    </div>
+    <div class="hero-copy hero-slide" id="heroSlide1" role="tabpanel" aria-labelledby="heroTab1">
       <p class="eyebrow rise" style="--d:.05s">Annaba, Algeria — freelance since 2021</p>
       <h1 class="name rise" style="--d:.15s">Abdeldjalil Halisse</h1>
       <div class="roles rise" style="--d:.25s">
@@ -597,6 +681,8 @@
         <div class="stat"><b>5+</b><span>years editing</span></div>
         <div class="stat"><b>200+</b><span>video projects delivered</span></div>
         <div class="stat"><b>2</b><span>disciplines, one workflow</span></div>
+      </div>
+    </div>
       </div>
     </div>
     <div class="hero-portrait" id="heroPortrait">
@@ -716,7 +802,6 @@
 
     <h4 class="projects-title">Past Projects</h4>
     <div class="grid-slider" id="projectSlider">
-      <button class="slider-btn" id="projPrev" aria-label="Previous projects">‹</button>
       <div class="project-pages">
     <div class="grid" id="videoGrid">
       <div class="card">
@@ -864,9 +949,12 @@
       </div>
       </div>
       </div>
-      <button class="slider-btn" id="projNext" aria-label="Next projects">›</button>
     </div>
-    <div class="page-dots" id="projectDots"></div>
+    <div class="pager" id="projectPager">
+      <button type="button" class="slider-btn" id="projPrev" aria-label="Previous projects">‹</button>
+      <div class="page-dots" id="projectDots"></div>
+      <button type="button" class="slider-btn" id="projNext" aria-label="Next projects">›</button>
+    </div>
     <div class="skill-cols" style="margin-top:44px;">
       <div>
         <h4>Tools</h4>
@@ -951,6 +1039,10 @@
       <a href="https://www.fiverr.com/s/NeN1Y6p" target="_blank" rel="noopener"><svg class="ico" viewBox="0 0 24 24" width="20" height="20" fill="#1DBF73" aria-hidden="true"><path d="M23.004 15.588a.995.995 0 1 0 .002-1.99.995.995 0 0 0-.002 1.99zm-.996-3.705h-.85c-.546 0-.84.41-.84 1.092v2.466h-1.61v-3.558h-.684c-.547 0-.84.41-.84 1.092v2.466h-1.61v-4.874h1.61v.74c.264-.574.626-.74 1.163-.74h1.972v.74c.264-.574.625-.74 1.162-.74h.527v1.316zm-6.786 1.501h-3.359c.088.546.43.858 1.006.858.43 0 .732-.175.83-.487l1.425.4c-.351.848-1.22 1.364-2.255 1.364-1.748 0-2.549-1.355-2.549-2.515 0-1.14.703-2.505 2.45-2.505 1.856 0 2.471 1.384 2.471 2.408 0 .224-.01.37-.02.477zm-1.562-.945c-.04-.42-.342-.81-.889-.81-.508 0-.81.225-.908.81h1.797zM7.508 15.44h1.416l1.767-4.874h-1.62l-.86 2.837-.878-2.837H5.72l1.787 4.874zm-6.6 0H2.51v-3.558h1.524v3.558h1.591v-4.874H2.51v-.302c0-.332.235-.536.606-.536h.918V8.412H2.85c-1.162 0-1.943.712-1.943 1.755v.4H0v1.316h.908v3.558z"/></svg><span>Fiverr profile</span></a>
       <a href="https://github.com/djalilhalisse" target="_blank" rel="noopener"><svg class="ico" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61 -.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.084-.729.084-.729 1.205.084 1.84 1.237 1.84 1.237 1.07 1.835 2.809 1.305 3.495.998 .108-.776.417-1.305.76-1.605-2.665-.303-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23 .645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.922.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57 C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg><span>GitHub profile</span></a>
       <a href="https://www.linkedin.com/in/abdeldjalil-halisse" target="_blank" rel="noopener"><svg class="ico" viewBox="0 0 24 24" width="20" height="20" fill="#3B8DDB" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg><span>LinkedIn</span></a>
+      <a href="#" target="_blank" rel="noopener"><svg class="ico" viewBox="0 0 24 24" width="20" height="20" fill="#E4405F" aria-hidden="true"><path d="M7.0301.084c-1.2768.0602-2.1487.264-2.911.5634-.7888.3075-1.4575.72-2.1228 1.3877-.6652.6677-1.075 1.3368-1.3802 2.127-.2954.7638-.4956 1.6365-.552 2.914-.0564 1.2775-.0689 1.6882-.0626 4.947.0062 3.2586.0206 3.6671.0825 4.9473.061 1.2765.264 2.1482.5635 2.9107.308.7889.72 1.4573 1.388 2.1228.6679.6655 1.3365 1.0743 2.1285 1.38.7632.295 1.6361.4961 2.9134.552 1.2773.056 1.6884.069 4.9462.0627 3.2578-.0062 3.668-.0207 4.9478-.0814 1.28-.0607 2.147-.2652 2.9098-.5633.7889-.3086 1.4578-.72 2.1228-1.3881.665-.6682 1.0745-1.3378 1.3795-2.1284.2957-.7632.4966-1.636.552-2.9124.056-1.2809.0692-1.6898.063-4.948-.0063-3.2583-.021-3.6668-.0817-4.9465-.0607-1.2797-.264-2.1487-.5633-2.9117-.3084-.7889-.72-1.4568-1.3876-2.1228C21.2982 1.33 20.628.9208 19.8378.6165 19.074.321 18.2017.1197 16.9244.0645 15.6471.0093 15.236-.005 11.977.0014 8.718.0076 8.31.0215 7.0301.0839m.1402 21.6932c-1.17-.0509-1.8053-.2453-2.2287-.408-.5606-.216-.96-.4771-1.3819-.895-.422-.4178-.6811-.8186-.9-1.378-.1644-.4234-.3624-1.058-.4171-2.228-.0595-1.2645-.072-1.6442-.079-4.848-.007-3.2037.0053-3.583.0607-4.848.05-1.169.2456-1.805.408-2.2282.216-.5613.4762-.96.895-1.3816.4188-.4217.8184-.6814 1.3783-.9003.423-.1651 1.0575-.3614 2.227-.4171 1.2655-.06 1.6447-.072 4.848-.079 3.2033-.007 3.5835.005 4.8495.0608 1.169.0508 1.8053.2445 2.228.408.5608.216.96.4754 1.3816.895.4217.4194.6816.8176.9005 1.3787.1653.4217.3617 1.056.4169 2.2263.0602 1.2655.0739 1.645.0796 4.848.0058 3.203-.0055 3.5834-.061 4.848-.051 1.17-.245 1.8055-.408 2.2294-.216.5604-.4763.96-.8954 1.3814-.419.4215-.8181.6811-1.3783.9-.4224.1649-1.0577.3617-2.2262.4174-1.2656.0595-1.6448.072-4.8493.079-3.2045.007-3.5825-.006-4.848-.0608M16.953 5.5864A1.44 1.44 0 1 0 18.39 4.144a1.44 1.44 0 0 0-1.437 1.4424M5.8385 12.012c.0067 3.4032 2.7706 6.1557 6.173 6.1493 3.4026-.0065 6.157-2.7701 6.1506-6.1733-.0065-3.4032-2.771-6.1565-6.174-6.1498-3.403.0067-6.156 2.771-6.1496 6.1738M8 12.0077a4 4 0 1 1 4.008 3.9921A3.9996 3.9996 0 0 1 8 12.0077"/></svg><span>Instagram</span></a>
+      <a href="#" target="_blank" rel="noopener"><svg class="ico" viewBox="0 0 24 24" width="20" height="20" fill="#0866FF" aria-hidden="true"><path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"/></svg><span>Facebook</span></a>
+      <a href="https://wa.me/213549434425" target="_blank" rel="noopener"><svg class="ico" viewBox="0 0 24 24" width="20" height="20" fill="#25D366" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg><span>WhatsApp</span></a>
+      <a href="#" target="_blank" rel="noopener"><svg class="ico" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg><span>TikTok</span></a>
     </div>
     <p class="fine">© 2026 Abdeldjalil Halisse. Built as a starting point — replace placeholder text, projects and links with your own.</p>
   </div>
@@ -1023,7 +1115,7 @@
       if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) go(page + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1);
     }, { passive: true });
 
-    if (pages === 1) { slider.classList.add('single'); dotsBox.classList.add('single'); }
+    if (pages === 1) { document.getElementById('projectPager').classList.add('single'); }
     render(0);
   })();
 
@@ -1101,6 +1193,114 @@
     });
   });
 
+  // Hero slideshow: Video Editing <-> AI & Data Analysis (auto-advances, pauses on hover / off-screen, swipe + tabs)
+  (function(){
+    const hero = document.querySelector('header.hero');
+    const left = document.getElementById('heroLeft');
+    if (!hero || !left) return;
+    const slides = [document.getElementById('heroSlide0'), document.getElementById('heroSlide1')];
+    const tabs = Array.prototype.slice.call(left.querySelectorAll('.hero-tab'));
+    let cur = 0;
+
+    function place(el, side){
+      // put a slide on the left/right waiting position without animating
+      el.style.transition = 'none';
+      el.classList.toggle('left', side === 'left');
+      void el.offsetWidth;
+      el.style.transition = '';
+    }
+    function show(next, dir){
+      if (next === cur) return;
+      dir = dir || (next > cur ? 1 : -1);
+      const out = slides[cur], inn = slides[next];
+      place(inn, dir > 0 ? 'right' : 'left');
+      out.classList.remove('active');
+      out.classList.toggle('left', dir > 0);          // leaves toward the left when going forward
+      inn.classList.add('active'); inn.classList.remove('left');
+      tabs.forEach(function(t, i){
+        const on = i === next;
+        t.classList.remove('active');
+        void t.offsetWidth;                            // restart the progress fill
+        t.classList.toggle('active', on);
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      const isAi = slides[next].classList.contains('ai');
+      hero.classList.toggle('is-ai', isAi);
+      document.dispatchEvent(new CustomEvent('herochange', { detail: { ai: isAi } }));
+      cur = next;
+    }
+    function advance(){ show((cur + 1) % slides.length, 1); }
+
+    tabs.forEach(function(t, i){ t.addEventListener('click', function(){ show(i); }); });
+    // autoplay is driven by the progress fill finishing (so pausing the fill pauses the slideshow)
+    tabs.forEach(function(t){
+      t.querySelector('i').addEventListener('animationend', function(){ if (t.classList.contains('active')) advance(); });
+    });
+
+    // pause: mouse hover, keyboard focus, or hero out of view
+    let hover = false, focus = false, visible = true;
+    function sync(){ hero.classList.toggle('paused', hover || focus || !visible || document.hidden); }
+    hero.addEventListener('pointerenter', function(e){ if (e.pointerType === 'mouse') { hover = true; sync(); } });
+    hero.addEventListener('pointerleave', function(){ hover = false; sync(); });
+    hero.addEventListener('focusin', function(){ focus = true; sync(); });
+    hero.addEventListener('focusout', function(){ focus = false; sync(); });
+    document.addEventListener('visibilitychange', sync);
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function(en){ visible = en[0].isIntersecting; sync(); }, { threshold: 0.25 }).observe(hero);
+    }
+
+    // swipe
+    let sx = null, sy = null;
+    left.addEventListener('touchstart', function(e){ sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+    left.addEventListener('touchend', function(e){
+      if (sx === null) return;
+      const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+      sx = sy = null;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) show((cur + (dx < 0 ? 1 : slides.length - 1)) % slides.length, dx < 0 ? 1 : -1);
+    }, { passive: true });
+  })();
+
+  // Scroll spy: highlight the nav item that matches the section currently on screen
+  (function(){
+    const nav = document.querySelector('nav');
+    const hero = document.querySelector('header.hero');
+    const modeBtns = Array.prototype.slice.call(document.querySelectorAll('.mode-toggle button'));
+    const links = Array.prototype.slice.call(document.querySelectorAll('.navlinks a[href^="#"]'));
+    const ids = ['top', 'engineer', 'editor', 'education', 'certificates', 'about', 'contact'];
+    const sections = ids.map(function(id){ return document.getElementById(id); }).filter(Boolean);
+    let current = null, ticking = false;
+
+    function setMode(mode, accent){
+      modeBtns.forEach(function(b){ b.classList.toggle('active', b.dataset.mode === mode); });
+      if (accent && mode) document.documentElement.style.setProperty('--accent', mode === 'amber' ? 'var(--amber)' : 'var(--teal)');
+    }
+    function apply(id){
+      current = id;
+      links.forEach(function(a){ a.classList.toggle('active', a.getAttribute('href') === '#' + id); });
+      if (id === 'engineer') setMode('teal', true);
+      else if (id === 'editor') setMode('amber', true);
+      else if (id === 'top') setMode(hero.classList.contains('is-ai') ? 'teal' : 'amber', false);
+      else setMode(null, false);
+    }
+    function pick(){
+      ticking = false;
+      const navH = nav ? nav.offsetHeight : 0;
+      const probe = navH + window.innerHeight * 0.3;
+      let id = sections[0].id;
+      sections.forEach(function(sec){ if (sec.getBoundingClientRect().top <= probe) id = sec.id; });
+      // reached the very bottom: the short last blocks should still get their turn
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) id = sections[sections.length - 1].id;
+      if (id !== current) apply(id);
+    }
+    function onScroll(){ if (!ticking) { ticking = true; requestAnimationFrame(pick); } }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    window.addEventListener('load', pick);
+    // while at the top, the toggle follows the hero slideshow
+    document.addEventListener('herochange', function(){ if (current === 'top') apply('top'); });
+    pick();
+  })();
+
   // Hero portrait: gentle parallax while scrolling
   (function(){
     const p = document.getElementById('heroPortrait');
@@ -1142,9 +1342,20 @@
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(run);
   })();
 
+  // Fixed nav: keep body offset equal to the nav's real height (it wraps on phones and changes with language)
+  (function(){
+    const nav = document.querySelector('nav');
+    if (!nav) return;
+    function measure(){ document.documentElement.style.setProperty('--nav-h', nav.offsetHeight + 'px'); }
+    measure();
+    if (window.ResizeObserver) new ResizeObserver(measure).observe(nav);
+    window.addEventListener('resize', measure);
+    window.addEventListener('load', measure);
+  })();
+
   // Language switch (EN / FR) + back-to-top button
   (function(){
-    const FR = {"Video Editing": "Montage vidéo", "Video": "Vidéo", "AI & Data": "IA & Données", "Education": "Formation", "Certificates": "Certificats", "About": "À propos", "editor": "monteur", "engineer": "ingénieur", "Annaba, Algeria — freelance since 2021": "Annaba, Algérie — freelance depuis 2021", "Video Editor": "Monteur vidéo", "AI Engineer & Data Analyst": "Ingénieur IA & Analyste de données", "I cut footage into stories on Fiverr and Upwork, and I build models and dashboards that make sense of data. Five-plus years editing, 200+ delivered projects, and a computer science background from Badji Mokhtar University, Annaba.": "Je transforme des rushes en histoires sur Fiverr et Upwork, et je conçois des modèles et des tableaux de bord qui donnent du sens aux données. Plus de cinq ans de montage, plus de 200 projets livrés et une formation en informatique à l'Université Badji Mokhtar, Annaba.", "years editing": "années de montage", "video projects delivered": "projets vidéo livrés", "disciplines, one workflow": "disciplines, un seul flux de travail", "Video editing work": "Travaux de montage vidéo", "A sample of client work across YouTube, e-commerce and social — replace with your own real projects and links.": "Un échantillon de travaux clients sur YouTube, l'e-commerce et les réseaux sociaux — à remplacer par vos propres projets et liens.", "Companies & YouTube channels I've edited for": "Entreprises et chaînes YouTube pour lesquelles j'ai monté des vidéos", "Past Projects": "Projets réalisés", "Watch video ↗": "Voir la vidéo ↗", "Watch video": "Voir la vidéo", "Channel": "Chaîne", "Tools": "Outils", "Craft": "Savoir-faire", "Compilation edit highlighting fair-play moments from top-level football, cut for pacing and emotional beats.": "Montage compilation mettant en avant des moments de fair-play du football de haut niveau, rythmé pour faire ressortir les émotions.", "A compilation of football's most respectful moments — fair play and gestures between rivals — paced to let the emotion land.": "Une compilation des moments les plus respectueux du football — fair-play et gestes entre rivaux — rythmée pour laisser toute sa place à l'émotion.", "A season highlights reel of the best goals so far, cut to the rhythm of the action with dynamic zooms and punchy transitions.": "Un résumé de saison des plus beaux buts à ce jour, monté au rythme de l'action avec des zooms dynamiques et des transitions percutantes.", "Standout goals worth a second look, edited with a stylized color treatment that keeps the focus on the strike.": "Des buts marquants à revoir, montés avec un traitement colorimétrique stylisé qui garde l'attention sur la frappe.", "Long-range goals from 2023 in a fast-paced edit built around the strike, the flight of the ball and the reaction.": "Des buts de loin de 2023 dans un montage rapide construit autour de la frappe, de la trajectoire du ballon et de la réaction.", "A house-flipping vlog kicking off a new project with a walk-through of the property.": "Un vlog de rénovation-revente qui lance un nouveau projet avec une visite de la propriété.", "The next episode in the house-flip series, following a new property project.": "L'épisode suivant de la série de rénovation-revente, autour d'un nouveau projet immobilier.", "A real estate vlog breaking down two months of results.": "Un vlog immobilier qui détaille deux mois de résultats.", "Color grading": "Étalonnage", "Motion graphics": "Motion design", "Sound design": "Design sonore", "Short-form & long-form": "Formats courts et longs", "Machine learning": "Apprentissage automatique", "Data visualization": "Visualisation de données", "Model deployment": "Déploiement de modèles", "Statistical analysis": "Analyse statistique", "AI & data work": "Travaux en IA et données", "Applied machine learning and analysis projects — swap in your real notebooks, repos and dashboards.": "Projets appliqués d'apprentissage automatique et d'analyse — à remplacer par vos propres notebooks, dépôts et tableaux de bord.", "Customer churn prediction model": "Modèle de prédiction du churn client", "Sales analytics dashboard": "Tableau de bord d'analyse des ventes", "Video-editing automation script": "Script d'automatisation du montage vidéo", "Sentiment analysis on reviews": "Analyse de sentiment sur des avis", "Gradient-boosted classifier on subscription data, with a feature-importance dashboard for the ops team.": "Classifieur à gradient boosting sur des données d'abonnement, avec un tableau de bord d'importance des variables pour l'équipe opérationnelle.", "End-to-end pipeline from raw CSV exports to a live Power BI dashboard tracking regional performance.": "Pipeline complet, des exports CSV bruts à un tableau de bord Power BI en direct suivant les performances régionales.", "A Python tool that auto-detects silences and jump-cuts raw footage, cutting first-pass editing time in half.": "Un outil Python qui détecte automatiquement les silences et effectue des jump cuts sur les rushes, réduisant de moitié le temps du premier montage.", "Fine-tuned transformer model classifying product reviews, deployed behind a lightweight API.": "Modèle transformer affiné pour classer des avis produits, déployé derrière une API légère.", "My academic path at Badji Mokhtar University, Annaba — the foundation behind both the AI engineering and the data work.": "Mon parcours universitaire à l'Université Badji Mokhtar, Annaba — la base de mon travail en ingénierie IA comme en analyse de données.", "Badji Mokhtar University": "Université Badji Mokhtar", "Annaba, Algeria": "Annaba, Algérie", "Master's degree": "Master", "Bachelor's degree": "Licence", "Computer Science": "Informatique", "Field of study · Specialization": "Domaine d'études · Spécialisation", "Thesis, key modules or honors — to be filled in from your CV": "Mémoire, modules clés ou distinctions — à compléter depuis votre CV", "Key modules, projects or honors — to be filled in from your CV": "Modules clés, projets ou distinctions — à compléter depuis votre CV", "Courses and certifications behind my editing work — from Premiere Pro fundamentals to motion graphics in After Effects.": "Les formations et certifications derrière mon travail de montage — des bases de Premiere Pro au motion design dans After Effects.", "Video editing": "Montage vidéo", "Issued 2020": "Délivré en 2020", "Issued 2019": "Délivré en 2019", "I split my time between two crafts that turn out to feed each other more than you'd expect: editing video teaches me to think in timelines and pacing, and engineering teaches me to think in data and systems. Clients hire me for one or the other — increasingly, for both at once, since I can automate parts of a post-production pipeline the same way I'd build any other data tool.": "Je partage mon temps entre deux métiers qui se nourrissent l'un l'autre plus qu'on ne le croirait : le montage vidéo m'apprend à penser en timelines et en rythme, et l'ingénierie m'apprend à penser en données et en systèmes. Mes clients font appel à moi pour l'un ou l'autre — de plus en plus pour les deux à la fois, car je peux automatiser des étapes d'une chaîne de post-production comme je construirais n'importe quel autre outil de données.", "Based in Annaba, Algeria, working with clients worldwide through Fiverr and Upwork.": "Basé à Annaba, en Algérie, je travaille avec des clients du monde entier via Fiverr et Upwork.", "Let's work together": "Travaillons ensemble", "Whether it's a video that needs cutting or data that needs making sense of — reach out.": "Qu'il s'agisse d'une vidéo à monter ou de données à analyser — contactez-moi.", "Email": "E-mail", "© 2026 Abdeldjalil Halisse. Built as a starting point — replace placeholder text, projects and links with your own.": "© 2026 Abdeldjalil Halisse. Conçu comme point de départ — remplacez le texte, les projets et les liens d'exemple par les vôtres.", "Back to top": "Retour en haut", "Scroll left": "Défiler vers la gauche", "Scroll right": "Défiler vers la droite", "Previous projects": "Projets précédents", "Next projects": "Projets suivants", "Previous": "Précédent", "Next": "Suivant", "Close": "Fermer", "Accent focus": "Focus de l'accent", "Language": "Langue", "Portrait of Abdeldjalil Halisse": "Portrait d'Abdeldjalil Halisse", "Abdeldjalil Halisse — Video Editor & AI Engineer": "Abdeldjalil Halisse — Monteur vidéo & Ingénieur IA"};
+    const FR = {"Video Editing": "Montage vidéo", "Video": "Vidéo", "AI & Data": "IA & Données", "Education": "Formation", "Certificates": "Certificats", "About": "À propos", "editor": "monteur", "engineer": "ingénieur", "Annaba, Algeria — freelance since 2021": "Annaba, Algérie — freelance depuis 2021", "Video Editor": "Monteur vidéo", "AI Engineer & Data Analyst": "Ingénieur IA & Analyste de données", "I cut footage into stories on Fiverr and Upwork, and I build models and dashboards that make sense of data. Five-plus years editing, 200+ delivered projects, and a computer science background from Badji Mokhtar University, Annaba.": "Je transforme des rushes en histoires sur Fiverr et Upwork, et je conçois des modèles et des tableaux de bord qui donnent du sens aux données. Plus de cinq ans de montage, plus de 200 projets livrés et une formation en informatique à l'Université Badji Mokhtar, Annaba.", "years editing": "années de montage", "video projects delivered": "projets vidéo livrés", "disciplines, one workflow": "disciplines, un seul flux de travail", "Video editing work": "Travaux de montage vidéo", "A sample of client work across YouTube, e-commerce and social — replace with your own real projects and links.": "Un échantillon de travaux clients sur YouTube, l'e-commerce et les réseaux sociaux — à remplacer par vos propres projets et liens.", "Companies & YouTube channels I've edited for": "Entreprises et chaînes YouTube pour lesquelles j'ai monté des vidéos", "Past Projects": "Projets réalisés", "Watch video ↗": "Voir la vidéo ↗", "Watch video": "Voir la vidéo", "Channel": "Chaîne", "Tools": "Outils", "Craft": "Savoir-faire", "Compilation edit highlighting fair-play moments from top-level football, cut for pacing and emotional beats.": "Montage compilation mettant en avant des moments de fair-play du football de haut niveau, rythmé pour faire ressortir les émotions.", "A compilation of football's most respectful moments — fair play and gestures between rivals — paced to let the emotion land.": "Une compilation des moments les plus respectueux du football — fair-play et gestes entre rivaux — rythmée pour laisser toute sa place à l'émotion.", "A season highlights reel of the best goals so far, cut to the rhythm of the action with dynamic zooms and punchy transitions.": "Un résumé de saison des plus beaux buts à ce jour, monté au rythme de l'action avec des zooms dynamiques et des transitions percutantes.", "Standout goals worth a second look, edited with a stylized color treatment that keeps the focus on the strike.": "Des buts marquants à revoir, montés avec un traitement colorimétrique stylisé qui garde l'attention sur la frappe.", "Long-range goals from 2023 in a fast-paced edit built around the strike, the flight of the ball and the reaction.": "Des buts de loin de 2023 dans un montage rapide construit autour de la frappe, de la trajectoire du ballon et de la réaction.", "A house-flipping vlog kicking off a new project with a walk-through of the property.": "Un vlog de rénovation-revente qui lance un nouveau projet avec une visite de la propriété.", "The next episode in the house-flip series, following a new property project.": "L'épisode suivant de la série de rénovation-revente, autour d'un nouveau projet immobilier.", "A real estate vlog breaking down two months of results.": "Un vlog immobilier qui détaille deux mois de résultats.", "Color grading": "Étalonnage", "Motion graphics": "Motion design", "Sound design": "Design sonore", "Short-form & long-form": "Formats courts et longs", "Machine learning": "Apprentissage automatique", "Data visualization": "Visualisation de données", "Model deployment": "Déploiement de modèles", "Statistical analysis": "Analyse statistique", "AI & data work": "Travaux en IA et données", "Applied machine learning and analysis projects — swap in your real notebooks, repos and dashboards.": "Projets appliqués d'apprentissage automatique et d'analyse — à remplacer par vos propres notebooks, dépôts et tableaux de bord.", "Customer churn prediction model": "Modèle de prédiction du churn client", "Sales analytics dashboard": "Tableau de bord d'analyse des ventes", "Video-editing automation script": "Script d'automatisation du montage vidéo", "Sentiment analysis on reviews": "Analyse de sentiment sur des avis", "Gradient-boosted classifier on subscription data, with a feature-importance dashboard for the ops team.": "Classifieur à gradient boosting sur des données d'abonnement, avec un tableau de bord d'importance des variables pour l'équipe opérationnelle.", "End-to-end pipeline from raw CSV exports to a live Power BI dashboard tracking regional performance.": "Pipeline complet, des exports CSV bruts à un tableau de bord Power BI en direct suivant les performances régionales.", "A Python tool that auto-detects silences and jump-cuts raw footage, cutting first-pass editing time in half.": "Un outil Python qui détecte automatiquement les silences et effectue des jump cuts sur les rushes, réduisant de moitié le temps du premier montage.", "Fine-tuned transformer model classifying product reviews, deployed behind a lightweight API.": "Modèle transformer affiné pour classer des avis produits, déployé derrière une API légère.", "My academic path at Badji Mokhtar University, Annaba — the foundation behind both the AI engineering and the data work.": "Mon parcours universitaire à l'Université Badji Mokhtar, Annaba — la base de mon travail en ingénierie IA comme en analyse de données.", "Badji Mokhtar University": "Université Badji Mokhtar", "Annaba, Algeria": "Annaba, Algérie", "Master's degree": "Master", "Bachelor's degree": "Licence", "Computer Science": "Informatique", "Field of study · Specialization": "Domaine d'études · Spécialisation", "Thesis, key modules or honors — to be filled in from your CV": "Mémoire, modules clés ou distinctions — à compléter depuis votre CV", "Key modules, projects or honors — to be filled in from your CV": "Modules clés, projets ou distinctions — à compléter depuis votre CV", "Courses and certifications behind my editing work — from Premiere Pro fundamentals to motion graphics in After Effects.": "Les formations et certifications derrière mon travail de montage — des bases de Premiere Pro au motion design dans After Effects.", "Video editing": "Montage vidéo", "Issued 2020": "Délivré en 2020", "Issued 2019": "Délivré en 2019", "I split my time between two crafts that turn out to feed each other more than you'd expect: editing video teaches me to think in timelines and pacing, and engineering teaches me to think in data and systems. Clients hire me for one or the other — increasingly, for both at once, since I can automate parts of a post-production pipeline the same way I'd build any other data tool.": "Je partage mon temps entre deux métiers qui se nourrissent l'un l'autre plus qu'on ne le croirait : le montage vidéo m'apprend à penser en timelines et en rythme, et l'ingénierie m'apprend à penser en données et en systèmes. Mes clients font appel à moi pour l'un ou l'autre — de plus en plus pour les deux à la fois, car je peux automatiser des étapes d'une chaîne de post-production comme je construirais n'importe quel autre outil de données.", "Based in Annaba, Algeria, working with clients worldwide through Fiverr and Upwork.": "Basé à Annaba, en Algérie, je travaille avec des clients du monde entier via Fiverr et Upwork.", "Let's work together": "Travaillons ensemble", "Whether it's a video that needs cutting or data that needs making sense of — reach out.": "Qu'il s'agisse d'une vidéo à monter ou de données à analyser — contactez-moi.", "Email": "E-mail", "© 2026 Abdeldjalil Halisse. Built as a starting point — replace placeholder text, projects and links with your own.": "© 2026 Abdeldjalil Halisse. Conçu comme point de départ — remplacez le texte, les projets et les liens d'exemple par les vôtres.", "Back to top": "Retour en haut", "Scroll left": "Défiler vers la gauche", "Scroll right": "Défiler vers la droite", "Previous projects": "Projets précédents", "Next projects": "Projets suivants", "Previous": "Précédent", "Next": "Suivant", "Close": "Fermer", "Accent focus": "Focus de l'accent", "Language": "Langue", "Portrait of Abdeldjalil Halisse": "Portrait d'Abdeldjalil Halisse", "Abdeldjalil Halisse — Video Editor & AI Engineer": "Abdeldjalil Halisse — Monteur vidéo & Ingénieur IA", "AI & Data Analysis": "IA & Analyse de données", "I build models and dashboards that make sense of data — from machine-learning pipelines to Power BI reporting. Master's-level training in artificial intelligence and information processing at Badji Mokhtar University, Annaba.": "Je conçois des modèles et des tableaux de bord qui donnent du sens aux données — des pipelines de machine learning aux rapports Power BI. Un Master en intelligence artificielle et traitement de l'information à l'Université Badji Mokhtar, Annaba.", "MSc": "Master", "in Artificial Intelligence": "en Intelligence Artificielle", "SQL & Power BI for data work": "SQL et Power BI pour l'analyse de données", "Hero slides": "Diaporama d'accueil"};
     const norm = function(t){ return t.replace(/\s+/g, ' ').trim().replace(/\u2019/g, "'"); };
     const SKIP = '.cert-card h3, .cert-issuer, #videoGrid h3, .tag, .channel-item, script, style, noscript, #cvOverlay';
     let lang = 'en';
