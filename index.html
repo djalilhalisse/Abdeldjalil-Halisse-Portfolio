@@ -572,6 +572,11 @@
     .hero-portrait { justify-self: end; align-self: end; width: min(100%, 38vw, 360px); margin: 0; }
   }
 
+  /* ---- portrait (stacked) layout: smaller hero intro paragraph ---- */
+  @media (orientation: portrait) and (max-width: 760px) {
+    .hero p.lede { font-size: clamp(14px, 4vw, 16px); line-height: 1.55; }
+  }
+
   /* channel chip (link + avatar) inside card tags */
   .tag-channel { display: inline-flex; align-items: center; gap: 7px; padding: 2px 11px 2px 3px; border-radius: 999px; color: var(--ink); text-decoration: none; transition: border-color .25s ease, color .25s ease, box-shadow .25s ease; }
   .tag-avatar { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; flex-shrink: 0; display: block; }
