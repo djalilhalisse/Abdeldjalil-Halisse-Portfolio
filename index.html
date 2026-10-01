@@ -552,6 +552,26 @@
     .stat span { display: block; margin-top: 4px; font-size: 12px; line-height: 1.35; }
   }
 
+  /* ---- phone LANDSCAPE: same two-column hero as desktop (text left, portrait right), scaled to the short screen ---- */
+  @media (orientation: landscape) and (max-height: 520px) {
+    .hero .wrap.hero-grid {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 12px; align-items: end; min-height: 0;
+      padding-left: max(clamp(20px, 4vw, 56px), env(safe-area-inset-left, 0px));
+      padding-right: max(clamp(20px, 4vw, 56px), env(safe-area-inset-right, 0px));
+    }
+    .hero-left { align-self: center; padding-top: 14px; }
+    .hero-tab { padding-top: 6px; padding-bottom: 6px; }
+    .hero-copy, .hero-left .hero-copy { padding: 12px 0 18px; align-self: center; }
+    .hero-copy .loc, .hero-copy .eyebrow { margin-bottom: 8px; }
+    h1.name, .name-ai { font-size: clamp(26px, 5.4vw, 44px); margin: 0 0 12px; white-space: nowrap; }
+    .hero .role-pill { font-size: 12px; padding: 5px 11px; }
+    .hero p.lede { font-size: clamp(13px, 1.9vw, 16px); line-height: 1.5; max-width: none; margin: 0 0 14px; }
+    .stat-row { display: flex; flex-wrap: wrap; gap: 8px 30px; }
+    .stat b { font-size: clamp(20px, 3.2vw, 28px); line-height: 1.1; overflow-wrap: normal; }
+    .stat span { margin-top: 2px; font-size: 11px; line-height: 1.3; }
+    .hero-portrait { justify-self: end; align-self: end; width: min(100%, 38vw, 360px); margin: 0; }
+  }
+
   /* channel chip (link + avatar) inside card tags */
   .tag-channel { display: inline-flex; align-items: center; gap: 7px; padding: 2px 11px 2px 3px; border-radius: 999px; color: var(--ink); text-decoration: none; transition: border-color .25s ease, color .25s ease, box-shadow .25s ease; }
   .tag-avatar { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; flex-shrink: 0; display: block; }
