@@ -545,11 +545,11 @@
     .hero-portrait { width: min(88%, 440px); }
   }
 
-  /* ---- stacked (narrow / portrait) layout: 3 hero stats on one row, sized to use the width ---- */
+  /* ---- stacked (narrow / portrait) layout: keep the 3 hero stats on one row ---- */
   @media (max-width: 760px) {
-    .stat-row { display: grid; grid-template-columns: repeat(3, auto); justify-content: space-between; column-gap: 10px; row-gap: 0; align-items: start; }
-    .stat b { font-size: clamp(24px, 8.6vw, 42px); line-height: 1.12; overflow-wrap: anywhere; }
-    .stat span { display: block; margin-top: 5px; max-width: 24vw; font-size: clamp(12px, 3.3vw, 15px); line-height: 1.35; }
+    .stat-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
+    .stat b { font-size: clamp(22px, 6.6vw, 32px); line-height: 1.15; overflow-wrap: anywhere; }
+    .stat span { display: block; margin-top: 4px; font-size: 12px; line-height: 1.35; }
   }
 
   /* channel chip (link + avatar) inside card tags */
