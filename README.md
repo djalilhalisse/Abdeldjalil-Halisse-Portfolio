@@ -47,19 +47,6 @@ It is a **single self-contained HTML file** (HTML, CSS and vanilla JavaScript, w
 - Vanilla JavaScript (language toggle, theme and accent modes, scroll animations, carousels and lightbox)
 - Google Fonts
 
-## Run locally
-
-No installation needed. Open the file in a browser:
-
-```bash
-git clone https://github.com/<your-username>/<repo-name>.git
-cd <repo-name>
-# open the HTML file in your browser, or serve it locally:
-python3 -m http.server 8000
-```
-
-Then visit <http://localhost:8000>.
-
 ## Deploy with GitHub Pages
 
 1. Rename the HTML file to **`index.html`** (GitHub Pages serves this file by default).
