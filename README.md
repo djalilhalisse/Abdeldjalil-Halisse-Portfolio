@@ -4,7 +4,7 @@ Personal portfolio of **Abdeldjalil Halisse**, AI Engineer & Data Analyst and fr
 
 It is a **single self-contained HTML file** (HTML, CSS and vanilla JavaScript, with images embedded), so it works offline, needs no build step and deploys anywhere.
 
-**Live site:** `https://<your-username>.github.io/<repo-name>/` *(replace after enabling GitHub Pages)*
+**Live site:** `(https://github.com/djalilhalisse/portfolio)`
 
 ## Screenshots
 
