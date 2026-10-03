@@ -6,12 +6,6 @@ It is a **single self-contained HTML file** (HTML, CSS and vanilla JavaScript, w
 
 **Live site:** `(https://github.com/djalilhalisse/portfolio)`
 
-## Screenshots
-
-![Home page](docs/screenshots/home.png)
-
-*Add a few screenshots to `docs/screenshots/`: the hero section, the AI & Data projects, the video editing section, and the French version.*
-
 ## What's inside
 
 | Section | Content |
