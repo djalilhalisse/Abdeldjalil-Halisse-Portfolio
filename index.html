@@ -61,6 +61,11 @@
   nav .wrap { display: flex; align-items: center; justify-content: space-between; padding-top: 16px; padding-bottom: 16px; }
   .brand { font-family: var(--serif); font-size: 19px; font-weight: 500; letter-spacing: .01em; }
   .brand-logo { width: 60px; height: 32px; object-fit: contain; display: block; }
+  .brand-logo { transition: filter .4s ease; }
+  /* the logo file is solid white: tint it dark grey (#2B2B2B) in light mode so it stays visible */
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) .brand-logo { filter: invert(1) brightness(3.3); }
+  }
   .navlinks { display: flex; gap: 26px; font-size: 14px; }
   .navlinks a { text-decoration: none; color: var(--ink-dim2); border-bottom: 1px solid transparent; padding-bottom: 2px; }
   .navlinks a:hover, .navlinks a.active { border-color: var(--accent); color: var(--ink); }
